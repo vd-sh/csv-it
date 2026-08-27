@@ -33,3 +33,209 @@
   #darkToggle {
     float: right;
   }
+
+  .table-wrap {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid #444;
+  }
+  body.light .table-wrap {
+    border-color: #ccc;
+  }
+  table {
+    border-collapse: collapse;
+    background: #2a2a2a;
+    table-layout: auto;
+  }
+  body.light table {
+    background: white;
+  }
+  th, td {
+    border: 1px solid #444;
+    padding: 0;
+    position: relative;
+  }
+  body.light th, body.light td {
+    border-color: #ccc;
+  }
+  th {
+    background: #333;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  body.light th {
+    background: #f0f0f0;
+  }
+
+  .row-num {
+    background: #333;
+    text-align: left;
+    cursor: grab;
+    user-select: none;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 70px;
+    white-space: nowrap;
+    padding: 6px 20px 6px 6px;
+  }
+  body.light .row-num {
+    background: #f0f0f0;
+  }
+  th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+  }
+
+  .col-handle {
+    cursor: grab;
+    display: block;
+    padding: 6px 20px 6px 6px;
+  }
+
+  td.cell-selected, th.cell-selected {
+    background: rgba(74, 144, 217, 0.25);
+    outline: 2px solid #4a90d9;
+    outline-offset: -2px;
+  }
+
+  .cell-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    line-height: 14px;
+    padding: 0;
+    margin: 0;
+    font-size: 11px;
+    border-radius: 3px;
+    border: 1px solid #666;
+    background: #444;
+    color: #eee;
+    cursor: pointer;
+    z-index: 4;
+  }
+  body.light .cell-remove {
+    background: #e0e0e0;
+    border-color: #bbb;
+    color: #222;
+  }
+  .cell-remove:hover,
+  body.light .cell-remove:hover {
+    background: #c0392b;
+    color: white;
+    border-color: #c0392b;
+  }
+
+  input[type="text"] {
+    display: block;
+    border: none;
+    padding: 6px 20px 6px 6px;
+    font-size: 14px;
+    background: transparent;
+    color: #eee;
+    width: 100%;
+    min-width: 80px;
+    box-sizing: border-box;
+  }
+  body.light input[type="text"] {
+    color: #222;
+  }
+  input[type="text"]:focus {
+    outline: 2px solid #4a90d9;
+    outline-offset: -2px;
+  }
+
+  button {
+    padding: 8px 14px;
+    margin: 0;
+    border: 1px solid #555;
+    background: #2a2a2a;
+    color: #eee;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  body.light button {
+    background: white;
+    border-color: #ccc;
+    color: #222;
+  }
+  button:hover {
+    background: #3a3a3a;
+  }
+  body.light button:hover {
+    background: #f0f0f0;
+  }
+  #exportBtn {
+    background: #4a90d9;
+    color: white;
+    border: none;
+  }
+  #exportBtn:hover {
+    background: #3a7bc0;
+  }
+
+  .toolbar {
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .file-toolbar {
+    align-items: flex-end;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field-group label {
+    font-size: 13px;
+    color: #aaa;
+  }
+  body.light .field-group label {
+    color: #666;
+  }
+  .button-group {
+    display: flex;
+    gap: 8px;
+  }
+  #filename {
+    padding: 8px 6px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 180px;
+    background: #2a2a2a;
+    color: #eee;
+    box-sizing: border-box;
+  }
+  body.light #filename {
+    background: white;
+    border-color: #ccc;
+    color: #222;
+  }
+
+  #notes {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #444;
+  }
+  body.light #notes {
+    border-color: #ccc;
+  }
+  #notes h2 {
+    font-size: 16px;
+  }
+  #notes p {
+    color: #aaa;
+    line-height: 1.5;
+  }
+  body.light #notes p {
+    color: #555;
+  }
