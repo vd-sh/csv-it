@@ -239,3 +239,54 @@
   body.light #notes p {
     color: #555;
   }
+
+  </style>
+</head>
+<body class="dark">
+
+<button id="darkToggle" onclick="toggleDarkMode()">Light</button>
+<h1>CSV it!</h1>
+<p class="sub">Fill in the table below, then export it as a CSV file. Your work is saved automatically.</p>
+
+<div class="toolbar">
+  <button onclick="addRow()">+ Add row</button>
+  <button onclick="addColumn()">+ Add column</button>
+  <button onclick="undo()" title="Ctrl+Z">↶ Undo</button>
+  <button onclick="redo()">↷ Redo</button>
+</div>
+
+<div class="table-wrap">
+  <table id="csvTable">
+    <thead>
+      <tr id="headerRow">
+        <th class="row-num"></th>
+        <th>
+          <input type="text" class="header-cell col-handle" value="Column 1" draggable="true" oninput="autosize(this); saveToStorage();">
+          <button class="cell-remove" onmousedown="event.stopPropagation()" onclick="removeColumn(this)">✕</button>
+        </th>
+        <th>
+          <input type="text" class="header-cell col-handle" value="Column 2" draggable="true" oninput="autosize(this); saveToStorage();">
+          <button class="cell-remove" onmousedown="event.stopPropagation()" onclick="removeColumn(this)">✕</button>
+        </th>
+        <th>
+          <input type="text" class="header-cell col-handle" value="Column 3" draggable="true" oninput="autosize(this); saveToStorage();">
+          <button class="cell-remove" onmousedown="event.stopPropagation()" onclick="removeColumn(this)">✕</button>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr>
+        <td class="row-num" draggable="true"><span class="row-label">Row 1</span><button class="cell-remove" onmousedown="event.stopPropagation()" onclick="removeRow(this)">✕</button></td>
+        <td><input type="text" oninput="autosize(this); saveToStorage();"></td>
+        <td><input type="text" oninput="autosize(this); saveToStorage();"></td>
+        <td><input type="text" oninput="autosize(this); saveToStorage();"></td>
+      </tr>
+      <tr>
+        <td class="row-num" draggable="true"><span class="row-label">Row 2</span><button class="cell-remove" onmousedown="event.stopPropagation()" onclick="removeRow(this)">✕</button></td>
+        <td><input type="text" oninput="autosize(this); saveToStorage();"></td>
+        <td><input type="text" oninput="autosize(this); saveToStorage();"></td>
+        <td><input type="text" oninput="autosize(this); saveToStorage();"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
