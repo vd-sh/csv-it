@@ -290,3 +290,27 @@
     </tbody>
   </table>
 </div>
+
+<div class="toolbar file-toolbar">
+  <div class="field-group">
+    <label for="filename">File name:</label>
+    <input type="text" id="filename" value="data.csv">
+  </div>
+  <div class="button-group">
+    <button onclick="triggerImport()">Import CSV</button>
+    <button id="exportBtn" onclick="exportCSV()">Export CSV</button>
+  </div>
+  <input type="file" id="importInput" accept=".csv" style="display:none" onchange="importCSV(event)">
+</div>
+
+<div id="notes">
+  <h2>Notes</h2>
+  <p>
+▸Click and drag across cells to select a range<br>
+▸You can use keyboard navigation<br>
+▸Press Delete or Backspace to clear a selected range of cells<br>
+▸Drag a row or column to reorder<br>
+▸Everything stays on local storage<br>
+▸This page was made by <a href="https://github.com/vd-sh" style="color:#57a0ee">vd-sh</a>, Github repo <a href="https://github.com/vd-sh/csv-it" style="color:#57a0ee">here!</a>
+  </p>
+</div>
