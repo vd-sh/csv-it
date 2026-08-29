@@ -314,3 +314,617 @@
 ▸This page was made by <a href="https://github.com/vd-sh" style="color:#57a0ee">vd-sh</a>, Github repo <a href="https://github.com/vd-sh/csv-it" style="color:#57a0ee">here!</a>
   </p>
 </div>
+
+<script>
+const STORAGE_KEY = 'csvit_table_data';
+
+let draggedRow = null;
+var draggedCol = null;
+
+let isSelecting = false;
+let anchorCell = null;
+let selectedCells = [];
+
+function autosize(input) {
+  const span = document.createElement('span');
+  span.style.visibility = 'hidden';
+  span.style.position = 'absolute';
+  span.style.whiteSpace = 'pre';
+  span.style.font = window.getComputedStyle(input).font;
+  span.textContent = input.value || input.placeholder || '';
+  document.body.appendChild(span);
+  const width = Math.max(80, span.offsetWidth + 36);
+  document.body.removeChild(span);
+  input.style.minWidth = width + 'px';
+}
+
+function autosizeAll(){
+  document.querySelectorAll('#csvTable input[type="text"]').forEach(autosize);
+}
+
+function toggleDarkMode(){
+  var body = document.body;
+  const btn = document.getElementById('darkToggle');
+  if (body.classList.contains('dark')) {
+    body.classList.remove('dark');
+    body.classList.add('light');
+    btn.textContent = 'Dark';
+  } else {
+    body.classList.remove('light');
+    body.classList.add('dark');
+    btn.textContent = 'Light';
+  }
+  saveToStorage();
+}
+
+function renumberRows(){
+  const rows = document.getElementById('tableBody').children;
+  let i = 1;
+  for (const row of rows) {
+    row.querySelector('.row-label').textContent = 'Row ' + i;
+    i++;
+  }
+}
+
+function makeRemoveButton(kind) {
+  const btn = document.createElement('button');
+  btn.className = 'cell-remove';
+  btn.textContent = '✕';
+  btn.onmousedown = function(e) { e.stopPropagation(); };
+  btn.onclick = function() {
+    if (kind === 'row') removeRow(btn);
+    else removeColumn(btn);
+  };
+  return btn;
+}
+
+function removeRow(btn) {
+  const body = document.getElementById("tableBody");
+  if(body.children.length <= 1){
+    alert("You need at least one row.");
+    return;
+  }
+  btn.closest('tr').remove();
+  renumberRows();
+  clearSelection();
+  saveToStorage();
+}
+
+function removeColumn(btn){
+  const th = btn.closest('th');
+  const headerRow = document.getElementById('headerRow');
+  if (headerRow.children.length <= 2) {
+    alert('You need at least one column.');
+    return;
+  }
+  const idx = Array.from(headerRow.children).indexOf(th);
+  th.remove();
+
+  const rows = document.getElementById('tableBody').children;
+  for (const row of rows) {
+    row.children[idx].remove();
+  }
+  clearSelection();
+  saveToStorage();
+}
+
+function addRow(){
+  const body = document.getElementById('tableBody');
+  const colCount = document.getElementById('headerRow').children.length - 1;
+  const row = document.createElement('tr');
+
+  const numCell = document.createElement('td');
+  numCell.className = 'row-num';
+  numCell.draggable = true;
+  const label = document.createElement('span');
+  label.className = 'row-label';
+  numCell.appendChild(label);
+  numCell.appendChild(makeRemoveButton('row'));
+  row.appendChild(numCell);
+
+  for (let i = 0; i < colCount; i++) {
+    const cell = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.oninput = function() { autosize(input); saveToStorage(); };
+    cell.appendChild(input);
+    row.appendChild(cell);
+  }
+
+  body.appendChild(row);
+  renumberRows();
+  attachAllListeners();
+  saveToStorage();
+}
+
+function addColumn(){
+  const headerRow = document.getElementById('headerRow');
+  const colNum = headerRow.children.length;
+  const th = document.createElement('th');
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'header-cell col-handle';
+  input.draggable = true;
+  input.value = 'Column ' + colNum;
+  input.oninput = function() { autosize(input); saveToStorage(); };
+  th.appendChild(input);
+  th.appendChild(makeRemoveButton('column'));
+  headerRow.appendChild(th);
+
+  const rows = document.getElementById('tableBody').children;
+  for (const row of rows) {
+    const cell = document.createElement('td');
+    const cellInput = document.createElement('input');
+    cellInput.type = 'text';
+    cellInput.oninput = function() { autosize(cellInput); saveToStorage(); };
+    cell.appendChild(cellInput);
+    row.appendChild(cell);
+  }
+  attachAllListeners();
+  saveToStorage();
+}
+
+function attachAllListeners() {
+  const headerCols = Array.from(document.getElementById('headerRow').children).slice(1);
+  headerCols.forEach(th => {
+    const handle = th.querySelector('.col-handle');
+    handle.ondragstart = function() { draggedCol = th; };
+    th.ondragover = function(e) { e.preventDefault(); };
+    th.ondrop = function() {
+      if (!draggedCol || draggedCol === th) return;
+      const parent = th.parentNode;
+      const draggedIdx = Array.from(parent.children).indexOf(draggedCol);
+      const targetIdx = Array.from(parent.children).indexOf(th);
+      moveColumn(draggedIdx, targetIdx);
+      draggedCol = null;
+      saveToStorage();
+    };
+  });
+
+  const bodyRows = document.getElementById('tableBody').children;
+  Array.from(bodyRows).forEach(row => {
+    const handle = row.querySelector('.row-num');
+    handle.ondragstart = function() { draggedRow = row; };
+    row.ondragover = function(e) { e.preventDefault(); };
+    row.ondrop = function() {
+      if (!draggedRow || draggedRow === row) return;
+      const body = document.getElementById('tableBody');
+      const draggedIdx = Array.from(body.children).indexOf(draggedRow);
+      const targetIdx = Array.from(body.children).indexOf(row);
+      if (draggedIdx < targetIdx) {
+        row.parentNode.insertBefore(draggedRow, row.nextSibling);
+      } else {
+        row.parentNode.insertBefore(draggedRow, row);
+      }
+      renumberRows();
+      draggedRow = null;
+      saveToStorage();
+    };
+  });
+
+  attachSelectionHandlers();
+}
+
+function moveColumn(idxA,idxB) {
+  const headerRow = document.getElementById('headerRow');
+  const headerCells = Array.from(headerRow.children);
+  if (idxA < idxB) {
+    headerRow.insertBefore(headerCells[idxA], headerCells[idxB].nextSibling);
+  } else {
+    headerRow.insertBefore(headerCells[idxA], headerCells[idxB]);
+  }
+
+  const rows = document.getElementById('tableBody').children;
+  for (const row of rows) {
+    const cells = Array.from(row.children);
+    if (idxA < idxB) {
+      row.insertBefore(cells[idxA], cells[idxB].nextSibling);
+    } else {
+      row.insertBefore(cells[idxA], cells[idxB]);
+    }
+  }
+}
+
+function getGrid(){
+  const headerCells = Array.from(document.getElementById('headerRow').children).slice(1);
+  const grid = [headerCells.map(th => th.querySelector('input'))];
+  const bodyRows = document.getElementById('tableBody').children;
+  for (const row of bodyRows) {
+    const inputs = Array.from(row.children).slice(1).map(td => td.querySelector('input'));
+    grid.push(inputs);
+  }
+  return grid;
+}
+
+function cellCoordsOf(input) {
+  const cell = input.closest('td, th');
+  const row = cell.closest('tr');
+  const isHeader = row.parentNode.tagName === 'THEAD';
+  const rowIdx = isHeader ? 0 : Array.from(document.getElementById('tableBody').children).indexOf(row) + 1;
+  const colIdx = Array.from(row.children).indexOf(cell) - 1;
+  return { row: rowIdx, col: colIdx };
+}
+
+function clearSelection(){
+  document.querySelectorAll('.cell-selected').forEach(el => el.classList.remove('cell-selected'));
+  selectedCells = [];
+}
+
+function applySelection(r1, c1, r2, c2) {
+  clearSelection();
+  const rowMin = Math.min(r1, r2), rowMax = Math.max(r1, r2);
+  const colMin = Math.min(c1, c2), colMax = Math.max(c1, c2);
+  const grid = getGrid();
+  for (let r = rowMin; r <= rowMax; r++) {
+    for (let c = colMin; c <= colMax; c++) {
+      const input = grid[r] && grid[r][c];
+      if (input) {
+        const cell = input.closest('td, th');
+        cell.classList.add('cell-selected');
+        selectedCells.push({ row: r, col: c, el: input });
+      }
+    }
+  }
+}
+
+function attachSelectionHandlers() {
+  document.querySelectorAll('#csvTable input[type="text"]').forEach(input => {
+    input.onmousedown = function() {
+      anchorCell = cellCoordsOf(input);
+      isSelecting = true;
+      applySelection(anchorCell.row, anchorCell.col, anchorCell.row, anchorCell.col);
+    };
+    input.onmouseover = function() {
+      if (isSelecting && anchorCell) {
+        const c = cellCoordsOf(input);
+        applySelection(anchorCell.row, anchorCell.col, c.row, c.col);
+      }
+    };
+    input.onkeydown = function(e) { handleCellKeydown(e, input); };
+  });
+}
+
+document.addEventListener('mouseup', function() {
+  isSelecting = false;
+});
+
+function handleCellKeydown(e, input) {
+  const coords = cellCoordsOf(input);
+  const grid = getGrid();
+
+  if (e.key === 'ArrowUp') {
+    const target = grid[coords.row - 1] && grid[coords.row - 1][coords.col];
+    if (target) {
+      e.preventDefault();
+      focusCell(target);
+    }
+  } else if (e.key === 'ArrowDown') {
+    const target = grid[coords.row + 1] && grid[coords.row + 1][coords.col];
+    if (target) {
+      e.preventDefault();
+      focusCell(target);
+    }
+  } else if (e.key === 'ArrowLeft') {
+    if (input.selectionStart === 0) {
+      const target = grid[coords.row] && grid[coords.row][coords.col - 1];
+      if (target) {
+        e.preventDefault();
+        focusCell(target);
+      }
+    }
+  } else if (e.key === 'ArrowRight') {
+    if (input.selectionStart === input.value.length) {
+      const target = grid[coords.row] && grid[coords.row][coords.col + 1];
+      if (target) {
+        e.preventDefault();
+        focusCell(target);
+      }
+    }
+  } else if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedCells.length > 1) {
+      e.preventDefault();
+      selectedCells.forEach(sc => {
+        sc.el.value = '';
+        autosize(sc.el);
+      });
+      saveToStorage();
+    }
+  } else if (e.key === 'Enter') {
+    const target = grid[coords.row + 1] && grid[coords.row + 1][coords.col];
+    if (target) {
+      e.preventDefault();
+      focusCell(target);
+    }
+  }
+}
+
+function focusCell(input){
+  const coords = cellCoordsOf(input);
+  applySelection(coords.row, coords.col, coords.row, coords.col);
+  input.focus();
+  input.select();
+}
+
+let history = [];
+let historyIndex = -1;
+let restoring = false;
+
+function snapshotState() {
+  const headers = Array.from(document.querySelectorAll('.header-cell')).map(input => input.value);
+  const rows = Array.from(document.getElementById('tableBody').children).map(row =>
+    Array.from(row.querySelectorAll('input[type="text"]')).map(input => input.value)
+  );
+  return { headers, rows };
+}
+
+function pushHistory() {
+  if (restoring) return;
+  const state = JSON.stringify(snapshotState());
+  if (history[historyIndex] === state) return;
+  history = history.slice(0, historyIndex + 1);
+  history.push(state);
+  historyIndex++;
+}
+
+function undo() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  restoring = true;
+  const state = JSON.parse(history[historyIndex]);
+  rebuildTable(state.headers, state.rows);
+  restoring = false;
+  saveToStorage();
+}
+
+function redo() {
+  if (historyIndex >= history.length - 1) return;
+  historyIndex++;
+  restoring = true;
+  const state = JSON.parse(history[historyIndex]);
+  rebuildTable(state.headers, state.rows);
+  restoring = false;
+  saveToStorage();
+}
+
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    undo();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+    e.preventDefault();
+    redo();
+  }
+});
+
+document.addEventListener('copy', function(e) {
+  if (!(document.activeElement && document.activeElement.tagName === 'INPUT')) return;
+  if (selectedCells.length < 1) return;
+
+  const rowsMap = {};
+  selectedCells.forEach(sc => {
+    if (!rowsMap[sc.row]) rowsMap[sc.row] = {};
+    rowsMap[sc.row][sc.col] = sc.el.value;
+  });
+  const rowKeys = Object.keys(rowsMap).map(Number).sort((a, b) => a - b);
+  const text = rowKeys.map(r => {
+    const colKeys = Object.keys(rowsMap[r]).map(Number).sort((a, b) => a - b);
+    return colKeys.map(c => rowsMap[r][c]).join('\t');
+  }).join('\n');
+
+  e.clipboardData.setData('text/plain', text);
+  e.preventDefault();
+});
+
+document.addEventListener('paste', function(e) {
+  if (!(document.activeElement && document.activeElement.tagName === 'INPUT')) return;
+  if (selectedCells.length < 1) return;
+
+  const text = e.clipboardData.getData('text/plain');
+  if (!text) return;
+  e.preventDefault();
+
+  const start = selectedCells[0];
+  const grid = getGrid();
+  const lines = text.replace(/\r/g, '').split('\n').filter((l, i, arr) => !(i === arr.length - 1 && l === ''));
+  lines.forEach((line, ri) => {
+    const values = line.split('\t');
+    values.forEach((val, ci) => {
+      const target = grid[start.row + ri] && grid[start.row + ri][start.col + ci];
+      if (target) {
+        target.value = val;
+        autosize(target);
+      }
+    });
+  });
+  saveToStorage();
+});
+
+function csvEscape(value) {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return '"' + value.replace(/"/g, '""') + '"'
+  }
+  return value
+}
+
+function buildCSV() {
+  const headers = Array.from(document.querySelectorAll('.header-cell')).map(input => csvEscape(input.value));
+  let csvContent = headers.join(',') + '\n';
+
+  const rows = document.getElementById('tableBody').children;
+  for (const row of rows) {
+    const inputs = row.querySelectorAll('input[type="text"]');
+    const values = Array.from(inputs).map(input => csvEscape(input.value));
+    csvContent += values.join(',') + '\n';
+  }
+  return csvContent;
+}
+
+function exportCSV() {
+  let filename = document.getElementById('filename').value.trim() || 'data.csv';
+  if (!filename.toLowerCase().endsWith('.csv')) {
+    filename += '.csv';
+  }
+
+  const blob = new Blob([buildCSV()], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  exportedOnce = true;
+}
+
+function triggerImport(){
+  document.getElementById('importInput').click();
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (inQuotes) {
+      if (char === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        current += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function rebuildTable(headers, rowsData) {
+  const headerRow = document.getElementById('headerRow');
+  headerRow.innerHTML = '<th class="row-num"></th>';
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'header-cell col-handle';
+    input.draggable = true;
+    input.value = h;
+    input.oninput = function() { autosize(input); saveToStorage(); };
+    th.appendChild(input);
+    th.appendChild(makeRemoveButton('column'));
+    headerRow.appendChild(th);
+  });
+
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
+  rowsData.forEach(values => {
+    const row = document.createElement('tr');
+    const numCell = document.createElement('td');
+    numCell.className = 'row-num';
+    numCell.draggable = true;
+    const label = document.createElement('span');
+    label.className = 'row-label';
+    numCell.appendChild(label);
+    numCell.appendChild(makeRemoveButton('row'));
+    row.appendChild(numCell);
+    values.forEach(v => {
+      const cell = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = v;
+      input.oninput = function() { autosize(input); saveToStorage(); };
+      cell.appendChild(input);
+      row.appendChild(cell);
+    });
+    body.appendChild(row);
+  });
+
+  renumberRows();
+  attachAllListeners();
+  autosizeAll();
+}
+
+function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const lines = e.target.result.split(/\r?\n/).filter(l => l.length > 0);
+    if (lines.length === 0) return;
+    const headers = parseCSVLine(lines[0]);
+    const rowsData = [];
+    for (let i = 1; i < lines.length; i++) {
+      rowsData.push(parseCSVLine(lines[i]));
+    }
+    rebuildTable(headers, rowsData);
+    saveToStorage();
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+let exportedOnce = false;
+window.addEventListener('beforeunload', function(e) {
+  if (!exportedOnce) {
+    e.preventDefault();
+    e.returnValue = 'Have you exported before closing this tab? You may lose unsaved work!';
+    return e.returnValue;
+  }
+});
+
+function saveToStorage() {
+  try {
+    const headers = Array.from(document.querySelectorAll('.header-cell')).map(input => input.value);
+    const rows = Array.from(document.getElementById('tableBody').children).map(row =>
+      Array.from(row.querySelectorAll('input[type="text"]')).map(input => input.value)
+    );
+    const filename = document.getElementById('filename').value;
+    const theme = document.body.classList.contains('light') ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ headers, rows, filename, theme }));
+  } catch (err) {
+  }
+  pushHistory();
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data.headers || !data.rows) return false;
+    rebuildTable(data.headers, data.rows);
+    if (data.filename) {
+      document.getElementById('filename').value = data.filename;
+    }
+    if (data.theme === 'light') {
+      document.body.classList.remove('dark');
+      document.body.classList.add('light');
+      document.getElementById('darkToggle').textContent = 'Dark';
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+document.getElementById('filename').addEventListener('input', saveToStorage);
+
+if (!loadFromStorage()) {
+  attachAllListeners();
+  autosizeAll();
+}
+pushHistory();
+</script>
+
+</body>
+</html>
