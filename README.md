@@ -1,4 +1,4 @@
-# CSV-it
+# csv-it
 HTML-based, minimal, clean, and fast CSV maker that stays on your local storage with a simple UI and export.
 
 ![CSV it! Dark Mode](Screenshot-2026-08-29-220447.png)
