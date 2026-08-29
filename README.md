@@ -5,7 +5,7 @@ HTML based, minimal, clean, and fast CSV maker that stays only on your local sto
 ![CSV it! Light Mode](Screenshot-2026-08-29-220542.png)
 
 ## How to use?
-No setup or installation required just click [here!]() to try it in browser! or visit [this](index.html) to see the code!
+No setup or installation required just click [here!](https://vd-sh.github.io/csv-it/index.html) to try it in browser! or visit [this](index.html) to see the code!
 
 ## Features
 - Click and drag to select cells
