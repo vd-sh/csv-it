@@ -6,8 +6,9 @@ HTML-based, minimal, clean, and fast CSV maker that stays on your local storage 
 
 ## How to use?
 - No setup or installation required; just click [here!](https://vd-sh.github.io/csv-it/index.html) to try it in your browser!
-
+- Open index.html in your browser to use locally.
 - Or click here to see the [CODE](index.html)
+
 ## Features
 - Click and drag to select cells
 - Arrow keys to move around, Enter to drop down a row
