@@ -1,8 +1,8 @@
 # csv-it
-HTML-based, minimal, clean, and fast CSV maker that stays on your local storage with a simple UI and export.
+HTML-based, minimal, clean, and fast CSV maker that stays in your local storage with a simple UI and export.
 
-![CSV it! Dark Mode](Screenshot-2026-08-29-220447.png)
-![CSV it! Light Mode](Screenshot-2026-08-29-220542.png)
+![CSV it! Dark Mode](Assets/Screenshot-2026-08-29-220447.png)
+![CSV it! Light Mode](Assets/Screenshot-2026-08-29-220542.png)
 
 ## How to use?
 - No setup or installation required; just click [here!](https://vd-sh.github.io/csv-it/index.html) to try it in your browser!
@@ -33,4 +33,4 @@ Single file. HTML, CSS, and JS all inline. No frameworks, no build step, no exte
 
 ## Notes
 - This is a simple tool for make-as-you-go builders who want to work on temporary edits for CSV tables.
-- Make sure to see my other projects like [Retropuzz Game](https://github.com/vd-sh/retropuzz), [Stardance- Luminator](https://github.com/vd-sh/luminator), [Stardance- MP3 Player](https://github.com/vd-sh/mp3-player), or visit my [profile](https://github.com/vd-sh) to see the latest works :)
+- Make sure to see my other projects like [Retropuzz](https://github.com/vd-sh/retropuzz), [Stardance- Luminator](https://github.com/vd-sh/luminator), [Stardance- MP3 Player](https://github.com/vd-sh/mp3-player), or visit my [profile](https://github.com/vd-sh) to see the latest works :)
