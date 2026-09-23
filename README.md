@@ -32,6 +32,5 @@ Single file. HTML, CSS, and JS all inline. No frameworks, no build step, no exte
 [MIT](LICENSE) - Read, Use, Modify, Do whatever you want to!
 
 ## Notes
-- This is a simple tool for make-as-you-go builders who want to work on temporary edits for CSV tables or sheets.
-- This website was made by [vd-sh](https://github.com/vd-sh).
-- Make sure to see my other projects like [BakeBuild- Cookie Cutters](https://github.com/vd-sh/cookie-cutters), [FuseRing- Keyrings](https://github.com/vd-sh/key-rings), [Retropuzz Game](https://github.com/vd-sh/retropuzz), or just visit the [profile](https://github.com/vd-sh) to see the latest works :)
+- This is a simple tool for make-as-you-go builders who want to work on temporary edits for CSV tables.
+- Make sure to see my other projects like [Retropuzz Game](https://github.com/vd-sh/retropuzz), [Stardance- Luminator](https://github.com/vd-sh/luminator), [Stardance- MP3 Player](https://github.com/vd-sh/mp3-player), or visit my [profile](https://github.com/vd-sh) to see the latest works :)
